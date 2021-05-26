@@ -1,4 +1,4 @@
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mlund/dipolar-fibrils/HEAD?filepath=notebook.ipynb?urlpath=lab)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mlund/dipolar-fibrils/HEAD?urlpath=lab/tree/notebook.ipynb)
 
 # Notebook for generating fibrils made of dipolar, charged beads
 
