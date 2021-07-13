@@ -1,0 +1,84 @@
+#!/usr/bin/env yason.py
+{% set eps = 0.05 * 2.5 %}
+{% set pH = 3.7 %}
+{% set Cs = 0.005 %}
+{% set dpsalt = 15 %}
+
+temperature: 298
+random: {seed: fixed}
+geometry: {type: cylinder, radius: 25, length: 200}
+mcloop: {macro: 10, micro: 5000}
+
+atomlist:
+    - ASP  :  { q: -1, r: 3.6, mw: 110, dp: 2, eps: {{ eps }} }
+    - HASP :  { q:  0, r: 3.6, mw: 110, dp: 2, eps: {{ eps }} }
+    - CTR  :  { q: -1, r: 2.0, mw: 16,  dp: 2, eps: {{ eps }} }
+    - HCTR :  { q:  0, r: 2.0, mw: 16,  dp: 2, eps: {{ eps }} }
+    - GLU  :  { q: -1, r: 3.8, mw: 122, dp: 2, eps: {{ eps }} }
+    - HGLU :  { q:  0, r: 3.8, mw: 122, dp: 2, eps: {{ eps }} }
+    - TYR  :  { q: -1, r: 4.1, mw: 154, dp: 2, eps: {{ eps }} }
+    - HTYR :  { q: 0,  r: 4.1, mw: 154, dp: 2, eps: {{ eps }} }
+    - CYt  :  { q: 0,  r: 3.6, mw: 103, dp: 2, eps: {{ eps }} }
+    - CYS  :  { q: -1, r: 3.6, mw: 103, dp: 2, eps: {{ eps }} }
+    - HCYS :  { q: 0,  r: 3.6, mw: 103, dp: 2, eps: {{ eps }} }
+    - HIS  :  { q: 0,  r: 3.9, mw: 130, dp: 2, eps: {{ eps }} }
+    - HHIS :  { q: 1,  r: 3.9, mw: 130, dp: 2, eps: {{ eps }} }
+    - NTR  :  { q: 0,  r: 2.0, mw: 14,  dp: 2, eps: {{ eps }} }
+    - HNTR :  { q: 1,  r: 2.0, mw: 14,  dp: 2, eps: {{ eps }} }
+    - LYS  :  { q: 0,  r: 3.7, mw: 116, dp: 2, eps: {{ eps }} }
+    - HLYS :  { q: 1,  r: 3.7, mw: 116, dp: 2, eps: {{ eps }} }
+    - ARG  :  { q: 0,  r: 4.0, mw: 144, dp: 2, eps: {{ eps }} }
+    - HARG :  { q: 1,  r: 4.0, mw: 144, dp: 2, eps: {{ eps }} }
+    - ALA  :  { q: 0,  r: 3.1, mw: 66,  dp: 2, eps: {{ eps }} }
+    - ILE  :  { q: 0,  r: 3.6, mw: 102, dp: 2, eps: {{ eps }} }
+    - LEU  :  { q: 0,  r: 3.6, mw: 102, dp: 2, eps: {{ eps }} }
+    - MET  :  { q: 0,  r: 3.8, mw: 122, dp: 2, eps: {{ eps }} }
+    - PHE  :  { q: 0,  r: 3.9, mw: 138, dp: 2, eps: {{ eps }} }
+    - PRO  :  { q: 0,  r: 3.4, mw: 90,  dp: 2, eps: {{ eps }} }
+    - TRP  :  { q: 0,  r: 4.3, mw: 176, dp: 2, eps: {{ eps }} }
+    - VAL  :  { q: 0,  r: 3.4, mw: 90,  dp: 2, eps: {{ eps }} }
+    - SER  :  { q: 0,  r: 3.3, mw: 82,  dp: 2, eps: {{ eps }} }
+    - THR  :  { q: 0,  r: 3.5, mw: 94,  dp: 2, eps: {{ eps }} }
+    - ASN  :  { q: 0,  r: 3.6, mw: 108, dp: 2, eps: {{ eps }} }
+    - GLN  :  { q: 0,  r: 3.8, mw: 120, dp: 2, eps: {{ eps }} }
+    - GLY  :  { q: 0,  r: 2.9, mw: 54,  dp: 2, eps: {{ eps }} }
+    - na   :  { q: 1,  r: 2.3, mw: 1, eps: {{ 0.01 }}, dp: {{ dpsalt }} }
+    - cl   :  { q: -1, r: 2.3, mw: 1, eps: {{ 0.01 }}, dp: {{ dpsalt }} }
+    - H+   :  { implicit: True, activity: {{ 10**(-pH) }}}
+
+moleculelist:
+    - Na+: {atomic: True, atoms: [na], activity: {{ Cs }} }
+    - Cl-: {atomic: True, atoms: [cl], activity: {{ Cs }} }
+    - protein:
+        structure: "beta-lactoglobulin-pH3.7.pqr"
+        insdir: [0.0, 0.0, 1.0]
+        keepcharges: True
+        rigid: True
+
+insertmolecules:
+    - protein: {N: 5} # the initial protein has a charge of -18e
+    - Cl-: {N: 15}
+
+energy:
+    - nonbonded_coulomblj:
+        lennardjones:
+            mixing: LB
+        coulomb: {epsr: 20, type: plain}
+moves:
+  - transrot: {molecule: Cl-, repeat: N}
+  - moltransrot: {molecule: protein, repeat: 1, dprot: 1, dp: 5, dir: [0,0,1]}
+  - volume: {method: z, dV: 0.5}
+
+analysis:
+    - sanity: {nstep: 10}
+    - multipole: {nstep: 20}
+    - reactioncoordinate: {type: system, property: mu, nstep: 10, file: system_dipole_moment.dat.gz}
+    - reactioncoordinate: {type: system, property: mu_x, nstep: 10, file: mu_x.dat.gz}
+    - reactioncoordinate: {type: system, property: mu_y, nstep: 10, file: mu_y.dat.gz}
+    - reactioncoordinate: {type: system, property: mu_z, nstep: 10, file: mu_z.dat.gz}
+    - reactioncoordinate: {type: system, property: Lz, nstep: 10, file: zlen.dat.gz}
+    - systemenergy: {file: energy.dat.gz, nstep: 100}
+    - xtcfile: {file: traj.xtc, nstep: 1000}
+    - savestate: {file: confout.pqr}
+    - savestate: {file: state.json}
+
